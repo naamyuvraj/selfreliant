@@ -87,21 +87,21 @@ export default function Hero() {
       <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60"></div>
 
       {/* Navigation Arrows */}
-      <button
+      {/* <button
         onClick={goToPrevious}
         className="absolute left-6 top-1/2 transform -translate-y-1/2 z-20 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full p-3 transition-all duration-300 group"
         aria-label="Previous image"
       >
         <ChevronLeft className="h-6 w-6 text-white group-hover:scale-110 transition-transform" />
-      </button>
+      </button> */}
 
-      <button
+      {/* <button
         onClick={goToNext}
         className="absolute right-6 top-1/2 transform -translate-y-1/2 z-20 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full p-3 transition-all duration-300 group"
         aria-label="Next image"
       >
         <ChevronRight className="h-6 w-6 text-white group-hover:scale-110 transition-transform" />
-      </button>
+      </button> */}
 
       {/* Main Content */}
       <div className="relative z-10 text-center text-white px-4 max-w-4xl">
