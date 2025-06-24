@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
-import { supabase } from "@/lib/supabaseClient"; // adjust path as needed
+import { supabase } from "@/lib/supabaseClient";
 import type { Product } from "./CartContext";
 
 interface ProductsState {
@@ -23,65 +23,57 @@ const ProductsContext = createContext<ProductsContextType | null>(null);
 
 export function ProductsProvider({ children }: { children: ReactNode }) {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
-  const [popularProductIds, setPopularProductIds] = useState<string[]>([]);
-  const [trendingProductIds, setTrendingProductIds] = useState<string[]>([]);
-  const [artisians, setArtisans] = useState<string[]>([]);
+  const [popularProducts, setPopularProductsState] = useState<Product[]>([]);
+  const [trendingProducts, setTrendingProductsState] = useState<Product[]>([]);
 
-  // 🔥 Fetch from Supabase
   useEffect(() => {
     const fetchProducts = async () => {
-      const { data, error } = await supabase.from("inventory").select("*");
+      const { data: inventoryData, error } = await supabase.from("inventory").select("*");
+
       if (error) {
-        console.error("Error fetching products:", error.message);
-      } else {
-        setAllProducts(data);
+        console.error("❌ Error fetching products:", error.message);
+        return;
       }
+
+      setAllProducts(inventoryData || []);
+
+      // Shuffle and pick 10 random products for "popular"
+      const shuffled = [...(inventoryData || [])].sort(() => 0.5 - Math.random());
+      setPopularProductsState(shuffled.slice(0, 10));
     };
 
     fetchProducts();
   }, []);
-  
-  
-
-  // console.log("All Products:", allProducts);
 
   const addProduct = (productData: Omit<Product, "id">) => {
     const newProduct: Product = {
       ...productData,
-      id: Date.now().toString(), // Replace with UUID if needed
+      id: Date.now().toString(),
     };
     setAllProducts((prev) => [...prev, newProduct]);
   };
 
   const updateProduct = (id: string, updates: Partial<Product>) => {
     setAllProducts((prev) =>
-      prev.map((product) =>
-        product.id === id ? { ...product, ...updates } : product
-      )
+      prev.map((product) => (product.id === id ? { ...product, ...updates } : product))
     );
   };
 
   const deleteProduct = (id: string) => {
     setAllProducts((prev) => prev.filter((product) => product.id !== id));
-    setPopularProductIds((prev) => prev.filter((pid) => pid !== id));
-    setTrendingProductIds((prev) => prev.filter((pid) => pid !== id));
+    setPopularProductsState((prev) => prev.filter((product) => product.id !== id));
+    setTrendingProductsState((prev) => prev.filter((product) => product.id !== id));
   };
 
   const setPopularProducts = (productIds: string[]) => {
-    setPopularProductIds(productIds);
+    const matched = allProducts.filter((p) => productIds.includes(String(p.id)));
+    setPopularProductsState(matched);
   };
 
   const setTrendingProducts = (productIds: string[]) => {
-    setTrendingProductIds(productIds);
+    const matched = allProducts.filter((p) => productIds.includes(String(p.id)));
+    setTrendingProductsState(matched);
   };
-
-  const popularProducts = allProducts.filter((product) =>
-    popularProductIds.includes(product.id)
-  );
-
-  const trendingProducts = allProducts.filter((product) =>
-    trendingProductIds.includes(product.id)
-  );
 
   const products: ProductsState = {
     allProducts,

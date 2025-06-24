@@ -4,8 +4,14 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../context/UserContext";
 import { supabase } from "@/lib/supabaseClient";
 import MandalaPattern from "../component/MandalaPatterns";
+import Image from "next/image";
 
-const tabs = ["Personal Info", "Address Book", "Customer Care"];
+const tabs = [
+  "Personal Info",
+  "Address Book",
+  "Order History",
+  "Customer Care",
+];
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("Personal Info");
@@ -23,7 +29,11 @@ export default function ProfilePage() {
     phone: "",
   });
 
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+
+  const [orders, setOrders] = useState<any[]>([]);
+  const [orderItemsMap, setOrderItemsMap] = useState<Record<string, any[]>>({});
+  const [loadingOrders, setLoadingOrders] = useState(true);
 
   useEffect(() => {
     if (user) {
@@ -32,9 +42,8 @@ export default function ProfilePage() {
   }, [user]);
 
   useEffect(() => {
-    if (user && activeTab === "Address Book") {
-      fetchAddresses();
-    }
+    if (user && activeTab === "Address Book") fetchAddresses();
+    if (user && activeTab === "Order History") fetchOrdersAndItems();
   }, [user, activeTab]);
 
   async function fetchCustomerProfile() {
@@ -56,18 +65,48 @@ export default function ProfilePage() {
       .from("customer_addresses")
       .select("*")
       .eq("customer_id", user?.id);
-    if (data) {
-      console.log("Fetched addresses:", data);
-      setAddressList(data || []);
-    }
+    if (data) setAddressList(data || []);
   }
 
-  async function handleProfileUpdate() {
-    if (!user?.id || !user?.email) {
-      alert("User not authenticated");
+  async function fetchOrdersAndItems() {
+    const { data: orders, error } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("customer_id", user?.id)
+      .eq("status", "Paid")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching orders:", error.message);
       return;
     }
 
+    setOrders(orders);
+
+    const { data: orderItems, error: itemsErr } = await supabase
+      .from("order_items")
+      .select(`*, inventory ( name, image_urls, description )`)
+      .in(
+        "order_id",
+        orders.map((o) => o.id)
+      );
+
+    if (itemsErr) {
+      console.error("Error fetching order items:", itemsErr.message);
+      return;
+    }
+
+    const grouped = orderItems.reduce((acc, item) => {
+      if (!acc[item.order_id]) acc[item.order_id] = [];
+      acc[item.order_id].push(item);
+      return acc;
+    }, {});
+
+    setOrderItemsMap(grouped);
+    setLoadingOrders(false);
+  }
+
+  async function handleProfileUpdate() {
     const { error } = await supabase.from("customers").upsert({
       id: user.id,
       name: fullName,
@@ -77,7 +116,6 @@ export default function ProfilePage() {
     });
 
     if (error) {
-      console.error("Profile update failed:", error.message);
       alert("Failed to update profile");
     } else {
       alert("Profile updated successfully");
@@ -88,6 +126,7 @@ export default function ProfilePage() {
     const { label, line1, city, state, pincode, phone } = newAddress;
     if (!label || !line1 || !city || !state || !pincode || !phone)
       return alert("All fields required");
+
     const { error } = await supabase.from("customer_addresses").insert({
       customer_id: user?.id,
       label,
@@ -97,12 +136,12 @@ export default function ProfilePage() {
       pincode,
       phone,
     });
+
     if (error) {
-      console.error("Address insert error:", error.message);
       alert("Failed to add address");
     } else {
       setNewAddress({
-        label: "",
+        label: "HOME",
         line1: "",
         city: "",
         state: "",
@@ -113,50 +152,50 @@ export default function ProfilePage() {
       fetchAddresses();
     }
   }
-
   return (
     <div className="min-h-screen bg-[#d69264] text-gray-800">
-<>
-  {/* Original Patterns + New Additions */}
-  <div className="absolute inset-0 pointer-events-none z-0">
-  <div className="absolute top-1/4 right-12">
-    <MandalaPattern type="mandala3" size="xl" opacity={0.6} />
-  </div>
-  <div className="absolute bottom-1/3 left-16">
-    <MandalaPattern type="lippan2" size="lg" opacity={0.45} />
-  </div>
-  <div className="absolute top-1/2 left-8">
-    <MandalaPattern type="mandala1" size="md" opacity={0.12} />
-  </div>
-  <div className="absolute bottom-1/4 right-20">
-    <MandalaPattern type="lippan1" size="lg" opacity={0.15} />
-  </div>
-  <div className="absolute top-16 left-1/3">
-    <MandalaPattern type="mandala2" size="sm" opacity={0.1} />
-  </div>
-  <div className="absolute bottom-16 right-1/3">
-    <MandalaPattern type="lippan2" size="md" opacity={0.12} />
-  </div>
+      <>
+        {/* Original Patterns + New Additions */}
+        <div className="absolute inset-0 pointer-events-none z-0">
+          <div className="absolute top-1/4 right-12">
+            <MandalaPattern type="mandala3" size="xl" opacity={0.6} />
+          </div>
+          <div className="absolute bottom-1/3 left-16">
+            <MandalaPattern type="lippan2" size="lg" opacity={0.45} />
+          </div>
+          <div className="absolute top-1/2 left-8">
+            <MandalaPattern type="mandala1" size="md" opacity={0.12} />
+          </div>
+          <div className="absolute bottom-1/4 right-20">
+            <MandalaPattern type="lippan1" size="lg" opacity={0.15} />
+          </div>
+          <div className="absolute top-16 left-1/3">
+            <MandalaPattern type="mandala2" size="sm" opacity={0.1} />
+          </div>
+          <div className="absolute bottom-16 right-1/3">
+            <MandalaPattern type="lippan2" size="md" opacity={0.12} />
+          </div>
 
-  {/* New Additions */}
-  <div className="absolute top-10 left-10">
-    <MandalaPattern type="mandala1" size="xl" opacity={0.08} />
-  </div>
-  <div className="absolute top-[60%] left-[60%]">
-    <MandalaPattern type="lippan1" size="sm" opacity={0.12} />
-  </div>
-  <div className="absolute top-[20%] right-[20%]">
-    <MandalaPattern type="mandala2" size="sm" opacity={0.15} />
-  </div>
-  <div className="absolute bottom-[12%] left-[25%]">
-    <MandalaPattern type="mandala3" size="md" opacity={0.1} />
-  </div>
-  <div className="absolute top-[40%] right-[10%]">
-    <MandalaPattern type="lippan2" size="xl" opacity={0.1} />
-  </div>
-  </div>
-</>
-      <div className="max-w-7xl mx-auto px-6 py-16">
+          {/* New Additions */}
+          <div className="absolute top-10 left-10">
+            <MandalaPattern type="mandala1" size="xl" opacity={0.08} />
+          </div>
+          <div className="absolute top-[60%] left-[60%]">
+            <MandalaPattern type="lippan1" size="sm" opacity={0.12} />
+          </div>
+          <div className="absolute top-[20%] right-[20%]">
+            <MandalaPattern type="mandala2" size="sm" opacity={0.15} />
+          </div>
+          <div className="absolute bottom-[12%] left-[25%]">
+            <MandalaPattern type="mandala3" size="md" opacity={0.1} />
+          </div>
+          <div className="absolute top-[40%] right-[10%]">
+            <MandalaPattern type="lippan2" size="xl" opacity={0.1} />
+          </div>
+        </div>
+      </>
+      <div className="relative z-10 max-w-7xl mx-auto px-6 py-16">
+        {" "}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           <div className="bg-white rounded-2xl shadow-lg p-8">
             <h2 className="text-2xl font-bold mb-8">My Account</h2>
@@ -367,6 +406,71 @@ export default function ProfilePage() {
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+            {/* Order History Tab */}
+            {activeTab === "Order History" && (
+              <div className="space-y-6">
+                <h3 className="text-3xl font-bold mb-6">Order History</h3>
+
+                {loadingOrders ? (
+                  <p className="text-gray-500">Loading orders...</p>
+                ) : orders.length === 0 ? (
+                  <p className="text-gray-500">No completed orders found.</p>
+                ) : (
+                  orders.map((order) => {
+                    const items = orderItemsMap[order.id] || [];
+                    const firstItem = items[0];
+                    const img = firstItem?.inventory?.image_urls?.[0];
+
+                    return (
+                      <div
+                        key={order.id}
+                        className="bg-gray-100 rounded-xl shadow-md p-5 mb-4"
+                      >
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-green-600 font-semibold">
+                            Delivered
+                          </span>
+                          <span className="text-sm text-gray-500">
+                            {new Date(order.created_at).toDateString()}
+                          </span>
+                        </div>
+
+                        <div className="flex gap-4">
+                          {img && (
+                            <div className="w-24 h-24 relative rounded-lg overflow-hidden flex-shrink-0">
+                              <Image
+                                src={img}
+                                alt="product"
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                          )}
+                          <div className="flex-1">
+                            <p className="font-semibold text-[#E2725B]">
+                              {firstItem?.inventory?.name}
+                            </p>
+                            <p className="text-sm text-gray-600 mb-1">
+                              Qty: {firstItem?.quantity}
+                            </p>
+                            <p className="text-sm text-gray-600 mb-1">
+                              ₹{firstItem?.price}
+                            </p>
+                            <p className="text-xs text-gray-400">
+                              Exchange/Return closed on{" "}
+                              {new Date(
+                                new Date(order.created_at).getTime() +
+                                  14 * 24 * 60 * 60 * 1000
+                              ).toDateString()}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             )}
 
