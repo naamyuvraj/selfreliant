@@ -1,0 +1,398 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useAuth } from "../context/UserContext";
+import { supabase } from "@/lib/supabaseClient";
+import MandalaPattern from "../component/MandalaPatterns";
+
+const tabs = ["Personal Info", "Address Book", "Customer Care"];
+
+export default function ProfilePage() {
+  const [activeTab, setActiveTab] = useState("Personal Info");
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [gender, setGender] = useState("MALE");
+  const [addressList, setAddressList] = useState<any[]>([]);
+  const [newAddress, setNewAddress] = useState({
+    label: "HOME",
+    line1: "",
+    city: "",
+    state: "",
+    pincode: "",
+    phone: "",
+  });
+
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      fetchCustomerProfile();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user && activeTab === "Address Book") {
+      fetchAddresses();
+    }
+  }, [user, activeTab]);
+
+  async function fetchCustomerProfile() {
+    const { data } = await supabase
+      .from("customers")
+      .select("name, phone, gender")
+      .eq("id", user?.id)
+      .single();
+
+    if (data) {
+      setFullName(data.name || "");
+      setPhone(data.phone || "");
+      setGender(data.gender || "MALE");
+    }
+  }
+
+  async function fetchAddresses() {
+    const { data } = await supabase
+      .from("customer_addresses")
+      .select("*")
+      .eq("customer_id", user?.id);
+    if (data) {
+      console.log("Fetched addresses:", data);
+      setAddressList(data || []);
+    }
+  }
+
+  async function handleProfileUpdate() {
+    if (!user?.id || !user?.email) {
+      alert("User not authenticated");
+      return;
+    }
+
+    const { error } = await supabase.from("customers").upsert({
+      id: user.id,
+      name: fullName,
+      email: user.email,
+      phone,
+      gender,
+    });
+
+    if (error) {
+      console.error("Profile update failed:", error.message);
+      alert("Failed to update profile");
+    } else {
+      alert("Profile updated successfully");
+    }
+  }
+
+  async function handleAddAddress() {
+    const { label, line1, city, state, pincode, phone } = newAddress;
+    if (!label || !line1 || !city || !state || !pincode || !phone)
+      return alert("All fields required");
+    const { error } = await supabase.from("customer_addresses").insert({
+      customer_id: user?.id,
+      label,
+      line1,
+      city,
+      state,
+      pincode,
+      phone,
+    });
+    if (error) {
+      console.error("Address insert error:", error.message);
+      alert("Failed to add address");
+    } else {
+      setNewAddress({
+        label: "",
+        line1: "",
+        city: "",
+        state: "",
+        pincode: "",
+        phone: "",
+      });
+      setShowAddressForm(false);
+      fetchAddresses();
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-[#d69264] text-gray-800">
+<>
+  {/* Original Patterns + New Additions */}
+  <div className="absolute inset-0 pointer-events-none z-0">
+  <div className="absolute top-1/4 right-12">
+    <MandalaPattern type="mandala3" size="xl" opacity={0.6} />
+  </div>
+  <div className="absolute bottom-1/3 left-16">
+    <MandalaPattern type="lippan2" size="lg" opacity={0.45} />
+  </div>
+  <div className="absolute top-1/2 left-8">
+    <MandalaPattern type="mandala1" size="md" opacity={0.12} />
+  </div>
+  <div className="absolute bottom-1/4 right-20">
+    <MandalaPattern type="lippan1" size="lg" opacity={0.15} />
+  </div>
+  <div className="absolute top-16 left-1/3">
+    <MandalaPattern type="mandala2" size="sm" opacity={0.1} />
+  </div>
+  <div className="absolute bottom-16 right-1/3">
+    <MandalaPattern type="lippan2" size="md" opacity={0.12} />
+  </div>
+
+  {/* New Additions */}
+  <div className="absolute top-10 left-10">
+    <MandalaPattern type="mandala1" size="xl" opacity={0.08} />
+  </div>
+  <div className="absolute top-[60%] left-[60%]">
+    <MandalaPattern type="lippan1" size="sm" opacity={0.12} />
+  </div>
+  <div className="absolute top-[20%] right-[20%]">
+    <MandalaPattern type="mandala2" size="sm" opacity={0.15} />
+  </div>
+  <div className="absolute bottom-[12%] left-[25%]">
+    <MandalaPattern type="mandala3" size="md" opacity={0.1} />
+  </div>
+  <div className="absolute top-[40%] right-[10%]">
+    <MandalaPattern type="lippan2" size="xl" opacity={0.1} />
+  </div>
+  </div>
+</>
+      <div className="max-w-7xl mx-auto px-6 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
+          <div className="bg-white rounded-2xl shadow-lg p-8">
+            <h2 className="text-2xl font-bold mb-8">My Account</h2>
+            <ul className="space-y-6">
+              {tabs.map((tab) => (
+                <li
+                  key={tab}
+                  className={`cursor-pointer text-lg font-semibold py-3 px-5 rounded-xl transition-all duration-200 hover:bg-[#E2725B]/10 ${
+                    activeTab === tab
+                      ? "text-[#E2725B] bg-[#E2725B]/10"
+                      : "text-gray-700"
+                  }`}
+                  onClick={() => setActiveTab(tab)}
+                >
+                  {tab}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="md:col-span-3 bg-white rounded-2xl shadow-lg p-10">
+            {activeTab === "Personal Info" && (
+              <div className="space-y-10">
+                <h3 className="text-3xl font-bold">Personal Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div>
+                    <label className="block text-base font-semibold mb-3">
+                      Full Name
+                    </label>
+                    <input
+                      type="text"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      className="w-full border border-gray-300 rounded-xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-[#E2725B]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-base font-semibold mb-3">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      value={user?.email || ""}
+                      disabled
+                      className="w-full border border-gray-200 rounded-xl px-5 py-4 bg-gray-100 text-gray-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-base font-semibold mb-3">
+                      Phone
+                    </label>
+                    <input
+                      type="text"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="w-full border border-gray-300 rounded-xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-[#E2725B]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-base font-semibold mb-3">
+                      Gender
+                    </label>
+                    <select
+                      value={gender}
+                      onChange={(e) => setGender(e.target.value)}
+                      className="w-full border border-gray-300 rounded-xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-[#E2725B]"
+                    >
+                      <option value="MALE">MALE</option>
+                      <option value="FEMALE">FEMALE</option>
+                      <option value="OTHER">OTHER</option>
+                    </select>
+                  </div>
+                </div>
+                <button
+                  onClick={handleProfileUpdate}
+                  className="bg-[#E2725B] text-white px-10 py-4 rounded-xl text-base font-semibold hover:bg-[#c85c48]"
+                >
+                  Update Profile
+                </button>
+              </div>
+            )}
+
+            {activeTab === "Address Book" && (
+              <div className="space-y-10">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-3xl font-bold">Address Book</h3>
+                  <button
+                    className="text-[#E2725B] text-base font-semibold hover:underline"
+                    onClick={() => setShowAddressForm(true)}
+                  >
+                    + Add new address
+                  </button>
+                </div>
+
+                {showAddressForm && (
+                  <div className="bg-[#FFF5F0] border border-[#E2725B] p-6 rounded-xl space-y-4">
+                    <input
+                      type="text"
+                      placeholder="Full Address"
+                      value={newAddress.line1}
+                      onChange={(e) =>
+                        setNewAddress({ ...newAddress, line1: e.target.value })
+                      }
+                      className="w-full border px-4 py-3 rounded-lg border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#E2725B]"
+                    />
+                    <input
+                      type="text"
+                      placeholder="City"
+                      value={newAddress.city}
+                      onChange={(e) =>
+                        setNewAddress({ ...newAddress, city: e.target.value })
+                      }
+                      className="w-full border px-4 py-3 rounded-lg border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#E2725B]"
+                    />
+                    <input
+                      type="text"
+                      placeholder="State"
+                      value={newAddress.state}
+                      onChange={(e) =>
+                        setNewAddress({ ...newAddress, state: e.target.value })
+                      }
+                      className="w-full border px-4 py-3 rounded-lg border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#E2725B]"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Pincode"
+                      value={newAddress.pincode}
+                      onChange={(e) =>
+                        setNewAddress({
+                          ...newAddress,
+                          pincode: e.target.value,
+                        })
+                      }
+                      className="w-full border px-4 py-3 rounded-lg border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#E2725B]"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Phone"
+                      value={newAddress.phone}
+                      onChange={(e) =>
+                        setNewAddress({ ...newAddress, phone: e.target.value })
+                      }
+                      className="w-full border px-4 py-3 rounded-lg border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#E2725B]"
+                    />
+                    <div>
+                      <label className="block text-base font-semibold mb-3">
+                        Address Type
+                      </label>
+                      <select
+                        value={newAddress.label}
+                        onChange={(e) =>
+                          setNewAddress({
+                            ...newAddress,
+                            label: e.target.value,
+                          })
+                        }
+                        className="w-full border border-gray-300 rounded-xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-[#E2725B]"
+                      >
+                        <option value="HOME">HOME</option>
+                        <option value="OFFICE">OFFICE</option>
+                        <option value="OTHER">OTHER</option>
+                      </select>
+                    </div>
+
+                    <button
+                      className="bg-[#E2725B] text-white px-6 py-3 rounded-lg hover:bg-[#c85c48]"
+                      onClick={handleAddAddress}
+                    >
+                      Save Address
+                    </button>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {addressList.length === 0 && (
+                    <div
+                      onClick={() => setShowAddressForm(true)}
+                      className="border border-dashed border-[#E2725B] rounded-xl p-6 shadow-md bg-white flex flex-col items-center justify-center cursor-pointer hover:bg-[#FFF5F0]"
+                    >
+                      <span className="text-4xl text-[#E2725B]">+</span>
+                      <p className="mt-2 text-[#E2725B] font-semibold">
+                        Add New Address
+                      </p>
+                    </div>
+                  )}
+
+                  {addressList.map((addr) => (
+                    <div
+                      key={addr.id}
+                      className="border border-gray-200 rounded-xl p-6 shadow-md bg-white"
+                    >
+                      <h4 className="font-bold text-lg mb-2">
+                        <span className="ml-2 text-xs text-gray-500">
+                          {addr.label}
+                        </span>
+                      </h4>
+                      <p className="text-base text-gray-700 leading-relaxed">
+                        {addr.line1}, {addr.city}, {addr.state}, India -{" "}
+                        {addr.pincode}
+                      </p>
+                      <p className="text-base text-gray-700 mt-2 font-semibold">
+                        Phone: {addr.phone}
+                      </p>
+                      <div className="mt-4 flex gap-6 text-base text-[#E2725B]">
+                        <button className="hover:underline">Edit</button>
+                        <button className="hover:underline">Delete</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === "Customer Care" && (
+              <div className="space-y-6">
+                <h3 className="text-3xl font-bold">Customer Care</h3>
+                <p className="text-lg text-gray-700">
+                  Need help? Reach out to us at{" "}
+                  <a
+                    href="mailto:support@selfreliant.com"
+                    className="text-[#E2725B] hover:underline"
+                  >
+                    support@selfreliant.com
+                  </a>{" "}
+                  or call us at{" "}
+                  <span className="font-semibold">+91-99999-99999</span>.
+                </p>
+                <p className="text-lg text-gray-700">
+                  Our support team is available Monday to Saturday, 10 AM - 6
+                  PM.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
