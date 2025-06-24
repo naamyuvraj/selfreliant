@@ -5,12 +5,14 @@ import { useAuth } from "../context/UserContext";
 import { supabase } from "@/lib/supabaseClient";
 import MandalaPattern from "../component/MandalaPatterns";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 const tabs = [
   "Personal Info",
   "Address Book",
   "Order History",
   "Customer Care",
+  "Logout",
 ];
 
 export default function ProfilePage() {
@@ -19,6 +21,7 @@ export default function ProfilePage() {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [gender, setGender] = useState("MALE");
+  const router = useRouter();
   const [addressList, setAddressList] = useState<any[]>([]);
   const [newAddress, setNewAddress] = useState({
     label: "HOME",
@@ -36,10 +39,13 @@ export default function ProfilePage() {
   const [loadingOrders, setLoadingOrders] = useState(true);
 
   useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/login");
+    }
     if (user) {
       fetchCustomerProfile();
     }
-  }, [user]);
+  }, [user, loading]);
 
   useEffect(() => {
     if (user && activeTab === "Address Book") fetchAddresses();
@@ -66,6 +72,15 @@ export default function ProfilePage() {
       .select("*")
       .eq("customer_id", user?.id);
     if (data) setAddressList(data || []);
+  }
+  async function handleLogout() {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error("Logout error:", error.message);
+      alert("Failed to logout.");
+    } else {
+      router.replace("/login"); // or use router.replace('/login')
+    }
   }
 
   async function fetchOrdersAndItems() {
@@ -208,7 +223,10 @@ export default function ProfilePage() {
                       ? "text-[#E2725B] bg-[#E2725B]/10"
                       : "text-gray-700"
                   }`}
-                  onClick={() => setActiveTab(tab)}
+                  onClick={() => {
+                    if (tab === "Logout") handleLogout();
+                    else setActiveTab(tab);
+                  }}
                 >
                   {tab}
                 </li>
