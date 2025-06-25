@@ -6,6 +6,10 @@ import { supabase } from "@/lib/supabaseClient";
 import MandalaPattern from "../component/MandalaPatterns";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import Navbar from "../component/Navbar";
+import Link from "next/link";
+import { CircleChevronLeft } from "lucide-react";
+import Footer from "../component/Footer";
 
 const tabs = [
   "Personal Info",
@@ -169,7 +173,11 @@ export default function ProfilePage() {
   }
   return (
     <div className="min-h-screen bg-[#d69264] text-gray-800">
+      <Navbar />
+            <main className="flex-1 relative z-10 max-w-7xl mx-auto px-6 py-12">
+
       <>
+
         {/* Original Patterns + New Additions */}
         <div className="absolute inset-0 pointer-events-none z-0">
           <div className="absolute top-1/4 right-12">
@@ -209,9 +217,9 @@ export default function ProfilePage() {
           </div>
         </div>
       </>
-      <div className="relative z-10 max-w-7xl mx-auto px-6 py-16">
-        {" "}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
+      {/* <div className="relative z-10 max-w-7xl mx-auto px-6  py-12"> */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mt-20">
+          
           <div className="bg-white rounded-2xl shadow-lg p-8">
             <h2 className="text-2xl font-bold mb-8">My Account</h2>
             <ul className="space-y-6">
@@ -514,7 +522,8 @@ export default function ProfilePage() {
             )}
           </div>
         </div>
-      </div>
+      </main>
+      <Footer />
     </div>
   );
 }

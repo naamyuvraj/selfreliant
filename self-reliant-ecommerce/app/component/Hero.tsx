@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-
+import Link from "next/link"
+import PopularProducts from "./PopularProducts"
 export default function Hero() {
   const [currentImage, setCurrentImage] = useState(0)
 
@@ -117,9 +118,9 @@ export default function Hero() {
           </span>
         </div>
 
-        <button className="bg-accent-green hover:bg-accent-green/90 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-all transform hover:scale-105 shadow-lg">
+        <a className="bg-accent-green hover:bg-accent-green/90 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-all transform hover:scale-105 shadow-lg" href="#popular-products">
           Explore Collection
-        </button>
+        </a>
       </div>
 
       {/* Dot Indicators */}

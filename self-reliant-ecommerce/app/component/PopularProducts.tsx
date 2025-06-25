@@ -69,7 +69,7 @@ export default function PopularProducts() {
   }, []);
 
   return (
-    <section className="py-20 relative" style={{ backgroundColor: "#d69264" }}>
+    <section className="py-20 relative" style={{ backgroundColor: "#d69264" }} id="popular-products">
       {/* Decorative Elements */}
       <div className="absolute top-10 left-10 opacity-10">
         <div className="w-24 h-24 border-4 border-white rounded-full flex items-center justify-center">

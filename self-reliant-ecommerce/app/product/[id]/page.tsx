@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import MandalaPattern from "../../component/MandalaPatterns";
+import { CircleChevronLeft } from "lucide-react";
 import {
   ArrowLeft,
   // Heart,
@@ -33,16 +34,13 @@ export default function ProductPage() {
 console.log("Product:", product?.artisian);
 if (!product) {
   return (
-    <div className="min-h-screen bg-[#d69264] flex items-center justify-center">
+    <div className="min-h-screen bg-[#d69264] flex items-center justify-center pt-16">
       <div className="text-center bg-white rounded-xl p-8 shadow-lg">
         <h1 className="text-2xl font-bold text-primary-dark mb-4">
           Product Not Found
         </h1>
-        <Link
-          href="/"
-          className="text-primary-gold hover:underline font-medium"
-        >
-          Return to Home
+                <Link href="/" className="text-white hover:underline font-medium mb-3 ">
+          <CircleChevronLeft className="inline-block mr-2 h-8 w-8" />
         </Link>
       </div>
     </div>
@@ -74,7 +72,7 @@ const isOutOfStock = product.quantity === 0;
         ];
 
   return (
-    <div className="min-h-screen bg-[#d69264]">
+    <div className="min-h-screen bg-[#d69264] pt-16">
       <div className="absolute top-1/4 right-12">
         <MandalaPattern type="mandala3" size="xl" opacity={0.6} />
       </div>
@@ -101,7 +99,7 @@ const isOutOfStock = product.quantity === 0;
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
-        <div className="flex items-center mb-8">
+        <div className="flex items-center mb-1">
           <Link
             href="/"
             className="flex items-center text-white hover:text-primary-gold transition-colors font-medium"
@@ -111,7 +109,7 @@ const isOutOfStock = product.quantity === 0;
           </Link>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden mt-16">
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden mt-2">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 p-8 lg:p-12">
             {/* Product Images */}
             <div className="space-y-4">
