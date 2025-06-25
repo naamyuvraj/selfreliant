@@ -222,8 +222,11 @@ export default function Navbar() {
           </div>
 
           {/* Mobile Menu */}
-          {isOpen && (
-            <div className="md:hidden border-t border-white/20 mt-4">
+{isOpen && (
+  <div
+    className="md:hidden border-t border-white/20 mt-4"
+    ref={dropdownRef} // ✅ so outside click detection works
+  >
               <div className="px-2 pt-2 pb-3 space-y-2">
                 <Link
                   href="/"
@@ -245,6 +248,7 @@ export default function Navbar() {
                           href="/sections/Handycrafts/papercraft"
                           className="block px-4 py-3 text-sm text-primary-gold hover:bg-white/50 hover:text-primary-gold transition-colors rounded-lg mx-2"
                           onClick={() => setActiveDropdown(null)}
+                          
                         >
                           Paper Crafts
                         </Link>

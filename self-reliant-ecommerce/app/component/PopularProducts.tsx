@@ -39,10 +39,11 @@ export default function PopularProducts() {
         salesMap[id] = (salesMap[id] || 0) + item.quantity;
       });
 
-      const topProductIds = Object.entries(salesMap)
-        .sort((a, b) => b[1] - a[1]) // sort by quantity
-        .slice(0, 10) // take top 10
-        .map(([id]) => id);
+const topProductIds = Object.entries(salesMap)
+  .sort((a, b) => b[1] - a[1])
+  .slice(0, 10)
+  .map(([id]) => id)
+  .filter((id) => !!id && id !== "null");
 
       if (topProductIds.length === 0) return;
 

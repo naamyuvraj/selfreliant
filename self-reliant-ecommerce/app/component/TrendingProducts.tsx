@@ -43,10 +43,11 @@ export default function TrendingProducts() {
         salesMap[id] = (salesMap[id] || 0) + item.quantity;
       });
 
-      const topProductIds = Object.entries(salesMap)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 10)
-        .map(([id]) => id);
+const topProductIds = Object.entries(salesMap)
+  .sort((a, b) => b[1] - a[1])
+  .slice(0, 10)
+  .map(([id]) => id)
+  .filter((id) => !!id && id !== "null"); // 🧼 Filter invalid IDs
 
       if (topProductIds.length === 0) return;
 
