@@ -1,13 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Trash2, Plus, Minus, ArrowLeft, ShoppingBag } from "lucide-react";
+import { useRouter } from "next/navigation";
+import {
+  Trash2,
+  Plus,
+  Minus,
+  ArrowLeft,
+  ShoppingBag,
+  IndianRupee,
+} from "lucide-react";
 import { useCart } from "../context/CartContext";
 import Navbar from "../component/Navbar";
 import Footer from "../component/Footer";
-import { IndianRupee } from "lucide-react";
 import { useAuth } from "../context/UserContext";
 import { supabase } from "@/lib/supabaseClient";
 import MandalaPattern from "../component/MandalaPatterns";
@@ -15,7 +22,14 @@ import MandalaPattern from "../component/MandalaPatterns";
 export default function CartPage() {
   const { state, dispatch } = useCart();
   const { user } = useAuth();
+  const router = useRouter();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+
+  useEffect(() => {
+    if (!user) {
+      router.push("/login");
+    }
+  }, [user, router]);
 
   const updateQuantity = (id, newQty) => {
     if (newQty === 0) dispatch({ type: "REMOVE_FROM_CART", payload: id });
@@ -23,10 +37,15 @@ export default function CartPage() {
       dispatch({ type: "UPDATE_QUANTITY", payload: { id, quantity: newQty } });
   };
 
+  const removeItem = (id) => {
+    dispatch({ type: "REMOVE_FROM_CART", payload: id });
+  };
+
   const handleCheckout = async () => {
     setIsCheckingOut(true);
     if (!user) {
       alert("Please log in to checkout");
+      router.push("/login");
       return setIsCheckingOut(false);
     }
 
@@ -44,6 +63,12 @@ export default function CartPage() {
 
     console.log("✅ Insert response:", orderInsertRes);
     console.log("❌ Insert error:", error);
+
+    if (error || !orderInsertRes) {
+      alert("Failed to place order. Please try again.");
+      setIsCheckingOut(false);
+      return;
+    }
 
     const order = orderInsertRes;
 
@@ -66,34 +91,34 @@ export default function CartPage() {
 
     alert("✅ Order placed successfully!");
     dispatch({ type: "CLEAR_CART" });
+    router.push("/orderhistory"); // ✅ Redirect after order
     setIsCheckingOut(false);
   };
 
   if (state.items.length === 0) {
     return (
       <div className="min-h-screen flex flex-col bg-[#d69264] pt-16">
-        {" "}
         <Navbar />
-              <div className="absolute top-1/4 right-12">
-                <MandalaPattern type="mandala3" size="xl" opacity={0.6} />
-              </div>
-              <div className="absolute bottom-1/3 left-16">
-                <MandalaPattern type="lippan2" size="lg" opacity={0.45} />
-              </div>
-              <div className="absolute top-1/2 left-8">
-                <MandalaPattern type="mandala1" size="md" opacity={0.12} />
-              </div>
-              <div className="absolute bottom-1/4 right-20">
-                <MandalaPattern type="lippan1" size="lg" opacity={0.15} />
-              </div>
-              <div className="absolute top-16 left-1/3">
-                <MandalaPattern type="mandala2" size="sm" opacity={0.1} />
-              </div>
-              <div className="absolute bottom-16 right-1/3">
-                <MandalaPattern type="lippan2" size="md" opacity={0.12} />
-              </div>
-        
-        
+        {/* Mandala Patterns */}
+        <div className="absolute top-1/4 right-12">
+          <MandalaPattern type="mandala3" size="xl" opacity={0.6} />
+        </div>
+        <div className="absolute bottom-1/3 left-16">
+          <MandalaPattern type="lippan2" size="lg" opacity={0.45} />
+        </div>
+        <div className="absolute top-1/2 left-8">
+          <MandalaPattern type="mandala1" size="md" opacity={0.12} />
+        </div>
+        <div className="absolute bottom-1/4 right-20">
+          <MandalaPattern type="lippan1" size="lg" opacity={0.15} />
+        </div>
+        <div className="absolute top-16 left-1/3">
+          <MandalaPattern type="mandala2" size="sm" opacity={0.1} />
+        </div>
+        <div className="absolute bottom-16 right-1/3">
+          <MandalaPattern type="lippan2" size="md" opacity={0.12} />
+        </div>
+
         <main className="flex-grow">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
             <div className="text-center bg-white rounded-2xl p-12 shadow-xl">
